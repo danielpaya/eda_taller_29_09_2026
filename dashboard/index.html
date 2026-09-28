@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿Compra o no compra? — Regresión logística Social Network Ads</title>
+  <meta name="description" content="Dashboard interactivo del modelo de regresión logística de Social Network Ads: estima la probabilidad de compra según edad, salario y género, con punto de corte ajustable.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Regresión logística · Social Network Ads</p>
+    <h1>¿Compra o no compra?</h1>
+    <p class="lede">Ingresa el perfil de una persona y el modelo estima la probabilidad de que
+      compre el producto anunciado. El punto de corte decide cómo esa probabilidad se convierte
+      en un sí o un no — muévelo y observa qué cambia.</p>
+    <div class="prov">
+      <span class="chip">n = 400</span>
+      <span class="chip">entrenado con 320 filas</span>
+      <span class="chip">AUC = 0.909</span>
+      <span class="chip">exactitud en prueba = 86.3 %</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ---------------- entradas ---------------- -->
+    <section class="panel" aria-labelledby="h-perfil">
+      <h2 id="h-perfil">Perfil de la persona</h2>
+
+      <div class="field">
+        <label class="flabel" for="edad">
+          <span>Edad</span><span class="fval" id="v-edad">42 años</span>
+        </label>
+        <input type="range" id="edad" min="18" max="60" step="1" value="42">
+        <div class="scale"><span>18</span><span>60</span></div>
+      </div>
+
+      <div class="field">
+        <label class="flabel" for="salario">
+          <span>Salario estimado</span><span class="fval" id="v-salario">$75,000</span>
+        </label>
+        <input type="range" id="salario" min="15000" max="150000" step="1000" value="75000">
+        <div class="scale"><span>$15k</span><span>$150k</span></div>
+      </div>
+
+      <div class="field">
+        <div class="flabel"><span id="lbl-gen">Género</span></div>
+        <div class="seg" role="group" aria-labelledby="lbl-gen">
+          <button type="button" id="gen-f" data-g="0" aria-pressed="true">Female</button>
+          <button type="button" id="gen-m" data-g="1" aria-pressed="false">Male</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="flabel" for="cutoff">
+          <span>Punto de corte</span><span class="fval" id="v-cutoff">0.46</span>
+        </label>
+        <input type="range" id="cutoff" min="0.05" max="0.95" step="0.01" value="0.46">
+        <div class="scale"><span>0.05</span><span>0.95</span></div>
+        <div class="presets">
+          <button type="button" data-cut="0.46">Óptimo · Youden 0.46</button>
+          <button type="button" data-cut="0.50">Convencional 0.50</button>
+          <button type="button" data-cut="0.35">Sens = Esp · 0.35</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------- veredicto ---------------- -->
+    <section class="panel verdict" aria-labelledby="h-veredicto">
+      <h2 id="h-veredicto">Pronóstico</h2>
+
+      <div class="vtop">
+        <div>
+          <div class="pct" id="pct">48.1<small>%</small></div>
+          <div class="pct-cap">probabilidad de compra</div>
+        </div>
+        <div>
+          <div class="pill buy" id="pill">
+            <span class="dot"></span><span id="pill-txt">Compra</span>
+          </div>
+          <div class="conf">confianza en el pronóstico: <b id="conf">48.1 %</b></div>
+        </div>
+      </div>
+
+      <div class="track-wrap">
+        <div class="cutflag" id="cutflag">corte 0.46</div>
+        <div class="track">
+          <div class="fill" id="fill"></div>
+          <div class="cutline" id="cutline"></div>
+        </div>
+        <div class="track-ends"><span>0 %</span><span>100 %</span></div>
+      </div>
+
+      <p class="track-note" id="nota" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div class="row2">
+
+    <!-- ---------------- descomposición del logit ---------------- -->
+    <section class="panel" aria-labelledby="h-desc">
+      <h2 id="h-desc">De dónde sale esa probabilidad</h2>
+
+      <div class="terms" id="terms"></div>
+
+      <div class="ttotal">
+        <span class="tname">z total</span>
+        <span class="tname soft">suma de las contribuciones</span>
+        <span class="tval" id="z-total">−0.075</span>
+      </div>
+
+      <div class="formula">p = 1 / (1 + e<sup>−z</sup>) = <span id="f-out">0.4812</span></div>
+    </section>
+
+    <!-- ---------------- mapa ---------------- -->
+    <section class="panel" aria-labelledby="h-mapa">
+      <h2 id="h-mapa">Dónde cae esta persona</h2>
+
+      <svg id="mapa" viewBox="0 0 520 330" role="img" aria-labelledby="mapa-t">
+        <title id="mapa-t">Dispersión de los 400 usuarios por edad y salario, con la frontera de decisión del modelo</title>
+      </svg>
+
+      <div class="legend">
+        <span class="lg"><span class="sw buy"></span>compró de verdad</span>
+        <span class="lg"><span class="sw nobuy"></span>no compró</span>
+        <span class="lg"><span class="sw line"></span>frontera de decisión</span>
+        <span class="lg"><span class="sw you"></span>la persona que ingresaste</span>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p><strong>Cómo leerlo.</strong> «Probabilidad de compra» es P(compra = 1). «Confianza en el
+      pronóstico» es la seguridad en la clase que el modelo eligió: coincide con la anterior si
+      predice compra, y es su complemento si predice que no.</p>
+    <p>Coeficientes estimados por máxima verosimilitud sobre las 320 filas de entrenamiento
+      (partición estratificada, semilla 42), tomados de
+      <code>EDA_RegLog_SocialAds.ipynb</code>, sección 6.1. Los puntos del mapa son los 400
+      usuarios reales del dataset. Modelo con fines académicos: el género no resultó
+      significativo (p = 0.40).</p>
+  </footer>
+
+</div>
+
+<script src="datos.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
